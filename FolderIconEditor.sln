@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33829.357
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FolderIconEditor", "FolderIconEditor.csproj", "{7143F354-F37E-4E52-AF02-FF11A297BABB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7143F354-F37E-4E52-AF02-FF11A297BABB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7143F354-F37E-4E52-AF02-FF11A297BABB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7143F354-F37E-4E52-AF02-FF11A297BABB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7143F354-F37E-4E52-AF02-FF11A297BABB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8B8F3819-D04A-4360-B746-0F07315F303E}
+	EndGlobalSection
+EndGlobal

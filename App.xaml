@@ -7,8 +7,8 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Examath.Core;component/Parts/Base.xaml"/>
-                <ResourceDictionary Source="/Examath.Core;component/Parts/Custom.xaml"/>
                 <ResourceDictionary Source="/Examath.Core;component/Parts/Inputs.xaml"/>
+                <ResourceDictionary Source="/Examath.Core;component/Parts/Custom.xaml"/>
                 <ResourceDictionary Source="/Examath.Core;component/Parts/ListView.xaml"/>
                 <ResourceDictionary Source="/Examath.Core;component/Parts/Menu.xaml"/>
                 <ResourceDictionary Source="/Examath.Core;component/Parts/Panels.xaml"/>

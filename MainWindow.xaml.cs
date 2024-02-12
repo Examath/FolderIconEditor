@@ -20,9 +20,24 @@ namespace FolderIconEditor
     /// </summary>
     public partial class MainWindow : Window
     {
+        private VM? _VM;
+
         public MainWindow()
         {
             InitializeComponent();
+        }
+
+        private void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            _VM = (VM)DataContext;
+        }
+
+        private void FolderTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+        {
+            if (_VM != null)
+            {
+                _VM.SelectedFolder = (Folder)FolderTreeView.SelectedItem;
+            }
         }
     }
 }

@@ -1,21 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
-using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Linq;
-using FolderIcons;
+using Examath.Core.Environment;
 
 namespace FolderIconEditor
 {
     public partial class Folder : ObservableObject
     {
         private const string DESKTOP_INI = "\\desktop.ini";
-        private const string ICON_PROPERTY_HEADER = "[.ShellClassInfo]";
-        private const string ICON_PROPERTY_START = "IconFile=";
+        private const string ICON_PROPERTY_KEY = "IconResource";
         private const string NOT_FOUND_PLACEHOLDER = "/Subject404.ico";
 
         /// <summary>
@@ -44,6 +38,21 @@ namespace FolderIconEditor
         /// Gets the subfolders
         /// </summary>
         public ObservableCollection<Folder> Children { get; private set; } = new();
+
+        public FileAttributes? FolderFileAttributes
+        {
+            get
+            {
+                try
+                {
+                    return File.GetAttributes(DirectoryInfo.FullName);
+                }
+                catch (Exception)
+                {
+                    return null;
+                }
+            }
+        }
 
         #endregion
 
@@ -77,9 +86,9 @@ namespace FolderIconEditor
                 string[] data = File.ReadAllLines(DesktopIniPath);
                 foreach (string line in data)
                 {
-                    if (line.StartsWith(ICON_PROPERTY_START))
+                    if (line.StartsWith(ICON_PROPERTY_KEY + '='))
                     {
-                        return line[ICON_PROPERTY_START.Length..].Split(',')[0];
+                        return line[(ICON_PROPERTY_KEY.Length + 1)..].Split(',')[0];
                     }
                 }
             }
@@ -90,20 +99,23 @@ namespace FolderIconEditor
         {
             if (iconPath != null)
             {
-                IniWriter.WriteValue(".ShellClassInfo", "IconFile",
-                     iconPath, DesktopIniPath);
-                IniWriter.WriteValue(".ShellClassInfo", "IconIndex",
-                     "0", DesktopIniPath);
-                SetIniFileAttributes(DesktopIniPath);
-                SetFolderAttributes(DirectoryInfo.FullName);                
-            }
+                try
+                {
+					FolderIconUpdater.SetFolderIcon(DirectoryInfo.FullName, iconPath);
 
-            string? actualIcon = GetIconPath();
-            if (actualIcon != iconPath)
-            {
-                _IconPath = actualIcon;
-                OnPropertyChanged(nameof(IconPath));
-            }
+					string? actualIcon = GetIconPath();
+					if (actualIcon != iconPath)
+					{
+						_IconPath = actualIcon;
+						OnPropertyChanged(nameof(IconPath));
+					}
+				}
+                catch (Exception e)
+                {
+                    Messager.OutException(e, "Setting Icon");
+                    throw;
+                }         
+			}
         }
 
         #endregion
@@ -124,45 +136,5 @@ namespace FolderIconEditor
         {
             return Name;
         }
-
-        #region helper Methods
-
-        // https://www.codeproject.com/Articles/9331/Create-Icons-for-Folders-in-Windows-Explorer-Using
-        private bool SetIniFileAttributes(string path)
-        {    
-            // Set ini file attribute to "Hidden"
-            if ((File.GetAttributes(path) & FileAttributes.Hidden)
-                != FileAttributes.Hidden)
-            {
-                File.SetAttributes(path, File.GetAttributes(path)
-                                   | FileAttributes.Hidden);
-            }
-
-            // Set ini file attribute to "System"
-            if ((File.GetAttributes(path) & FileAttributes.System)
-                   != FileAttributes.System)
-            {
-                File.SetAttributes(path, File.GetAttributes(path)
-                                    | FileAttributes.System);
-            }
-
-            return true;
-        }
-
-        // https://www.codeproject.com/Articles/9331/Create-Icons-for-Folders-in-Windows-Explorer-Using
-        private bool SetFolderAttributes(string path)
-        {    
-            // Set folder attribute to "System"
-            if ((File.GetAttributes(path) & FileAttributes.System)
-                != FileAttributes.System)
-            {
-                File.SetAttributes(path, File.GetAttributes
-                                  (path) | FileAttributes.System);
-            }
-
-            return true;
-        }
-
-        #endregion
     }
 }

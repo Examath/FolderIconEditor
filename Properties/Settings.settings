@@ -3,10 +3,10 @@
   <Profiles />
   <Settings>
     <Setting Name="IconSource" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\paulj\OneDrive\Pictures\Logos</Value>
+      <Value Profile="(Default)" />
     </Setting>
     <Setting Name="DefaultFolder" Type="System.String" Scope="User">
-      <Value Profile="(Default)">C:\Users\paulj\OneDrive\Documents\2024</Value>
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

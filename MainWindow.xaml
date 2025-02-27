@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:FolderIconEditor"
         xmlns:controls="clr-namespace:Examath.Core.Controls;assembly=Examath.Core"
         mc:Ignorable="d"
-        Title="Folder Icon Editor"
+        Title="Folder Icon Editor v2.0"
         Height="500" Width="600"
         WindowState="Maximized"
         Loaded="Window_Loaded"
@@ -16,7 +16,7 @@
     </Window.DataContext>
     <Window.InputBindings>        
         <KeyBinding Key="Return" Command="{Binding SetIconCommand}"/>
-        <KeyBinding Key="Delete" Command="{Binding ResetIconCommand}"/>
+        <KeyBinding Key="Delete" Command="{Binding UnsetIconCommand}"/>
     </Window.InputBindings>
     <Window.Resources>
         <CollectionViewSource x:Key="IconsViewSource" Source="{Binding IconReferences}">
@@ -28,7 +28,8 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="1*"/>
+            <RowDefinition Height="4*"/>
+            <RowDefinition Height="8"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
@@ -36,8 +37,13 @@
             <ColumnDefinition Width="8"/>
             <ColumnDefinition Width="1*"/>
         </Grid.ColumnDefinitions>
-        <controls:DirectoryPicker Directory="{Binding FolderDirectory}"/>
-        <TreeView x:Name="FolderTreeView" Grid.Row="1" ItemsSource="{Binding Folders}" SelectedItemChanged="FolderTreeView_SelectedItemChanged">
+        <DockPanel>
+            <Button Content="Set Icon" Command="{Binding SetIconCommand}" />
+            <Button Content="Unset Icon" Command="{Binding UnsetIconCommand}" />
+            <controls:DirectoryPicker Directory="{Binding FolderDirectory}"/>
+        </DockPanel>
+        <controls:DirectoryPicker Grid.Column="3" Directory="{Binding IconDirectory}"/>
+        <TreeView x:Name="FolderTreeView" Grid.Row="1" ItemsSource="{Binding Folders}" SelectedItemChanged="FolderTreeView_SelectedItemChanged" Margin="2">
             <TreeView.ItemTemplate>
                 <HierarchicalDataTemplate DataType="local:Folder" ItemsSource="{Binding Children}">
                     <StackPanel Orientation="Horizontal" Margin="2">
@@ -55,8 +61,13 @@
                 </HierarchicalDataTemplate>
             </TreeView.ItemTemplate>
         </TreeView>
-        <GridSplitter Grid.Column="1" Grid.RowSpan="2" Width="8"/>
-        <ListBox Style="{StaticResource ContrastListBoxStyle}" Grid.Row="1" Grid.Column="2"
+        <GridSplitter Grid.Column="0" Grid.Row="2" Height="8" HorizontalAlignment="Stretch"/>
+        <StackPanel Grid.Row="4" Orientation="Horizontal">
+            <Label Content="{Binding SelectedFolder.Name, FallbackValue='No folder selected', StringFormat='Name: {0}'}"/>
+            <Label Content="{Binding SelectedFolder.FolderFileAttributes, FallbackValue='', StringFormat='Attributes: {0}'}"/>
+        </StackPanel>
+        <GridSplitter Grid.Column="1" Grid.Row="0" Grid.RowSpan="4" Width="8"/>
+        <ListBox Style="{StaticResource ContrastListBoxStyle}" Grid.Row="1" Grid.Column="2" Grid.RowSpan="3"
                  ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                  ItemsSource="{Binding Source={StaticResource IconsViewSource}}"
                  SelectedItem="{Binding SelectedIcon}">
@@ -99,9 +110,5 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <WrapPanel Grid.Row="2">
-            <Button Content="Set Icon" Command="{Binding SetIconCommand}" />
-            <Button Content="Reset Icon" Command="{Binding ResetIconCommand}" />
-        </WrapPanel>
     </Grid>
 </Window>

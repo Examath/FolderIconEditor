@@ -18,19 +18,44 @@ namespace FolderIconEditor
     {
         #region Init
 
-        public VM() 
-        {
-            _FolderDirectory = Settings.Default.DefaultFolder;
+        public VM()
+		{
+			if (!Directory.Exists(Settings.Default.DefaultFolder))
+            {
+                Settings.Default.DefaultFolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                Settings.Default.Save();
+            }
+			_FolderDirectory = Settings.Default.DefaultFolder;
             UpdateFolders();
-            LoadIcons(Settings.Default.IconSource);
+
+
+			if (!Directory.Exists(Settings.Default.IconSource))
+			{
+				Settings.Default.IconSource = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+				Settings.Default.Save();
+			}
+			_IconDirectory = Settings.Default.IconSource;
+            UpdateIcons();
+
             Debug.WriteLine("Load Complete");
+
         }
 
-        #endregion
+		#endregion
 
-        #region Folders
+		#region Validation
 
-        private string _FolderDirectory;
+		public static ValidationResult? DirectoryExists(string directory, ValidationContext context)
+		{
+			if (Directory.Exists(directory)) return ValidationResult.Success;
+			else return new("Directory does not exist");
+		}
+
+		#endregion
+
+		#region Folders
+
+		private string _FolderDirectory;
         /// <summary>
         /// Gets or sets the directory of the folders to edit
         /// </summary>
@@ -44,15 +69,12 @@ namespace FolderIconEditor
             }
         }
 
-        public static ValidationResult? DirectoryExists(string directory, ValidationContext context)
-        {
-            if (Directory.Exists(directory)) return ValidationResult.Success;
-            else return new("Directory does not exist");
-        }
+        public ObservableCollection<Folder> Folders { get; private set; } = new();
 
         private void UpdateFolders()
         {
             Settings.Default.DefaultFolder = _FolderDirectory;
+            Settings.Default.Save();
 
             SelectedFolder = null;
             Folders.Clear();
@@ -66,10 +88,7 @@ namespace FolderIconEditor
                     Folders.Add(new(subDirectory));
                 }
             }
-
         }
-
-        public ObservableCollection<Folder> Folders { get; private set; } = new();
 
         private Folder? _SelectedFolder;
         /// <summary>
@@ -84,22 +103,40 @@ namespace FolderIconEditor
                 {
                     SelectedIcon = null;
                     SetIconCommand.NotifyCanExecuteChanged();
-                    ResetIconCommand.NotifyCanExecuteChanged();
+                    UnsetIconCommand.NotifyCanExecuteChanged();
                 }
             }
         }
 
-        #endregion
+		#endregion
 
-        #region Icons
+		#region Icons
 
-        public ObservableCollection<IconReference> IconReferences { get; private set; } = new();
+		private string _IconDirectory;
+		/// <summary>
+		/// Gets or sets the directory of the icon source
+		/// </summary>
+		[CustomValidation(typeof(VM), nameof(DirectoryExists))]
+		public string IconDirectory
+		{
+			get => _IconDirectory;
+			set
+			{
+				if (SetProperty(ref _IconDirectory, value, true)) UpdateFolders();
+			}
+		}
 
-        private void LoadIcons(string directory)
-        {
-            IconReferences.Clear();
+		public ObservableCollection<IconReference> IconReferences { get; private set; } = new();
 
-            foreach (string path in Directory.GetFiles(directory, "*.ico", SearchOption.AllDirectories))
+        private void UpdateIcons()
+		{
+			Settings.Default.IconSource = _IconDirectory;
+			Settings.Default.Save();
+
+            SelectedIcon = null;
+			IconReferences.Clear();
+
+            foreach (string path in Directory.GetFiles(_IconDirectory, "*.ico", SearchOption.AllDirectories))
             {
                 IconReferences.Add(new IconReference(path));
             }
@@ -136,10 +173,10 @@ namespace FolderIconEditor
             }
         }
 
-        public bool CanResetIcon => SelectedFolder != null;
+        public bool CanUnsetIcon => SelectedFolder != null;
 
-        [RelayCommand(CanExecute = nameof(CanResetIcon))]
-        public void ResetIcon()
+        [RelayCommand(CanExecute = nameof(CanUnsetIcon))]
+        public void UnsetIcon()
         {
             if (SelectedFolder != null)
             {

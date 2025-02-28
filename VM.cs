@@ -11,6 +11,8 @@ using FolderIconEditor.Properties;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using CommunityToolkit.Mvvm.Input;
+using System.Windows.Forms;
+using Examath.Core.Environment;
 
 namespace FolderIconEditor
 {
@@ -65,7 +67,12 @@ namespace FolderIconEditor
             get => _FolderDirectory;
             set
             {
-                if(SetProperty(ref _FolderDirectory, value, true)) UpdateFolders();                    
+                if (SetProperty(ref _FolderDirectory, value, true)) 
+                {
+                    UpdateFolders();
+					Settings.Default.DefaultFolder = _FolderDirectory;
+					Settings.Default.Save();
+				};                    
             }
         }
 
@@ -73,9 +80,6 @@ namespace FolderIconEditor
 
         private void UpdateFolders()
         {
-            Settings.Default.DefaultFolder = _FolderDirectory;
-            Settings.Default.Save();
-
             SelectedFolder = null;
             Folders.Clear();
 
@@ -122,17 +126,19 @@ namespace FolderIconEditor
 			get => _IconDirectory;
 			set
 			{
-				if (SetProperty(ref _IconDirectory, value, true)) UpdateFolders();
+				if (SetProperty(ref _IconDirectory, value, true))
+                {
+                    UpdateIcons();
+					Settings.Default.IconSource = _IconDirectory;
+					Settings.Default.Save();
+				}
 			}
 		}
 
 		public ObservableCollection<IconReference> IconReferences { get; private set; } = new();
 
         private void UpdateIcons()
-		{
-			Settings.Default.IconSource = _IconDirectory;
-			Settings.Default.Save();
-
+		{	
             SelectedIcon = null;
 			IconReferences.Clear();
 
@@ -173,7 +179,7 @@ namespace FolderIconEditor
             }
         }
 
-        public bool CanUnsetIcon => SelectedFolder != null;
+        public bool CanUnsetIcon => SelectedFolder != null && SelectedFolder.IconPath != null;
 
         [RelayCommand(CanExecute = nameof(CanUnsetIcon))]
         public void UnsetIcon()
@@ -182,6 +188,60 @@ namespace FolderIconEditor
             {
                 SelectedFolder.IconPath = null;
             }
+        }
+
+        [RelayCommand]
+        public void ImportIcons()
+        {
+            // Select images
+
+            OpenFileDialog openFileDialog = new()
+            {
+                InitialDirectory = IconDirectory,
+                Multiselect = true,
+                Title = "Select image(s) to convert to .ico",
+                Filter = "\"Image Files (BMP, GIF, EXIF, JPG, PNG and TIFF)|*.bmp;*.jpg;*.jpeg;*.png;*.gif;*.tiff;*.exif|All Files|*.*",
+            };
+
+            if (openFileDialog.ShowDialog() != DialogResult.OK || openFileDialog.FileNames.Length < 1) return;
+
+            // Select output directory
+
+            Ookii.Dialogs.Wpf.VistaFolderBrowserDialog vistaFolderBrowserDialog = new()
+            {
+                Description = $"Select the output directory for the {openFileDialog.FileNames.Length} converted icons",
+                UseDescriptionForTitle = true,
+            };
+
+            if (vistaFolderBrowserDialog.ShowDialog() != true) return;
+
+			// Execute conversion
+
+			try
+			{
+                IconConverter.ConvertImagesToIco(openFileDialog.FileNames, vistaFolderBrowserDialog.SelectedPath);
+
+                if (vistaFolderBrowserDialog.SelectedPath.Contains(IconDirectory))
+				{
+					UpdateIcons();
+				}
+                else
+                {
+                    IconDirectory = vistaFolderBrowserDialog.SelectedPath;
+                }
+			}
+			catch (Exception e)
+			{
+				Messager.OutException(e, "Converting Icons");
+				throw;
+			}
+		}
+
+        [RelayCommand]
+        public void Refresh()
+        {
+            UpdateFolders();
+            UpdateIcons();
         }
 
         #endregion
